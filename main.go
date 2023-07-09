@@ -87,7 +87,7 @@ func main() {
 			if i > 0 {
 				fmt.Println()
 			}
-			fmt.Printf("%s:\n", dir.OpenDirIcon+v.Name())
+			fmt.Printf("%s:\n", dir.OpenDirIcon+ctw.ColorizeDirHeader(v.Name()))
 			if api.FlagVector&api.Flag_D > 0 {
 				dir.GitRepoCompute()
 			}
@@ -97,7 +97,7 @@ func main() {
 		pName := len(dirs) > 1
 		for i, v := range args.dirs {
 			if pName {
-				fmt.Printf("%s:\n", dir.OpenDirIcon+v.Name())
+				fmt.Printf("%s:\n", dir.OpenDirIcon+ctw.ColorizeDirHeader(v.Name()))
 			}
 			if api.FlagVector&api.Flag_D > 0 {
 				dir.GitRepoCompute()

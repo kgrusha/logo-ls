@@ -48,9 +48,9 @@ func (l *LongCTW) Flush(buf *bytes.Buffer) {
 		}
 	}
 
-	// explicitly setting git column to 1
+	// explicitly setting width of git column to 1
 	l.c[l.cols] = 1
-	// explicitly setting icon column to 2
+	// explicitly setting width of icon column to 2
 	l.c[l.cols-2] = 1
 
 	for i, r := range l.d {
@@ -63,13 +63,29 @@ func (l *LongCTW) Flush(buf *bytes.Buffer) {
 				fmt.Fprintf(buf, "%s", brailEmpty)
 			}
 
+			// icon
 			if j == l.cols-2 {
 				fmt.Fprintf(buf, "%s%*s%s", l.ic[i], l.c[j], c, noColor)
-			} else if j >= l.cols-1 && (1<<l.cols)&skipCol == 0 {
+			} else if j == l.cols && (1<<l.cols)&skipCol == 0 {
 				color := getGitColor(r[l.cols])
 				fmt.Fprintf(buf, "%s%-*s%s", color, l.c[j], c, noColor)
+			} else if j == l.cols-1 {
+				color := getFilenameColor(c)
+				fmt.Fprintf(buf, "%s%-*s%s", color, l.c[j], getSanitizedFilename(c), noColor)
+			} else if j == l.cols-4 {
+				// file sizes are right-aligned
+				// human-readable formats will have the letter highlighted
+				if c[len(c)-1:] > "9" {
+					fmt.Fprintf(buf, "%s%*s%s%s%s", getSizeColor(c), l.c[j]-1, c[0:len(c)-1], white+_bold, c[len(c)-1:], noColor)
+				} else {
+					fmt.Fprintf(buf, "%s%*s%s", getSizeColor(c), l.c[j], c, noColor)
+				}
+			} else if j == 1 {
+				// color permissions
+				fmt.Fprintf(buf, "%-*s", l.c[j], getColoredPerm(c))
 			} else {
-				fmt.Fprintf(buf, "%-*s", l.c[j], c)
+				// the rest of the columns are left-aligned
+				fmt.Fprintf(buf, "%s%-*s%s", getOtherColors(c), l.c[j], c, noColor)
 			}
 			f = false
 		}

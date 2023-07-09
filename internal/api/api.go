@@ -38,20 +38,21 @@ const (
 	Flag_o
 	Flag_g
 	Flag_G
+	Flag_dir // show directories first
 )
 
 // flagVector has all the options set in it. Each bit represent an option.
 var FlagVector uint
 
-// time formate
-var timeFormate string
+// time format
+var timeFormat string
 
-func TimeFormate(t string) {
-	timeFormate = t
+func TimeFormat(t string) {
+	timeFormat = t
 }
 
-func GetTimeFormate() string {
-	return timeFormate
+func GetTimeFormat() string {
+	return timeFormat
 }
 
 var FileList []string
@@ -84,10 +85,11 @@ func Bootstrap() {
 	f_X := getopt.Bool('X', "sort alphabetically by entry extension")
 	f_v := getopt.Bool('v', "natural sort of (version) numbers within text")
 	f_t := getopt.Bool('t', "sort by modification time, newest first")
+	f_dir := getopt.BoolLong("group-directories-first", 'Z', "group directories first")
 
 	f_r := getopt.BoolLong("reverse", 'r', "reverse order while sorting")
 	f_R := getopt.BoolLong("recursive", 'R', "list subdirectories recursively")
-	f_T := getopt.EnumLong("time-style", 'T', []string{"Stamp", "StampMilli", "Kitchen", "ANSIC", "UnixDate", "RubyDate", "RFC1123", "RFC1123Z", "RFC3339", "RFC822", "RFC822Z", "RFC850"}, "Stamp", "time/date format with -l; see time-style below")
+	f_T := getopt.EnumLong("time-style", 'T', []string{"Stamp", "StampMilli", "Kitchen", "ANSIC", "UnixDate", "RubyDate", "RFC1123", "RFC1123Z", "RFC3339", "RFC822", "RFC822Z", "RFC850", "ISOshort", "StampShort"}, "StampShort", "time/date format with -l; see time-style below")
 
 	f_help := getopt.BoolLong("help", '?', "display this help and exit")
 	f_V := getopt.BoolLong("version", 'V', "output version information and exit")
@@ -124,6 +126,8 @@ func Bootstrap() {
 		FlagVector |= Flag_v
 	case *f_U:
 		FlagVector |= Flag_U
+	case *f_dir:
+		FlagVector |= Flag_dir
 	default:
 		FlagVector |= Flag_alpha
 	}
@@ -168,34 +172,38 @@ func Bootstrap() {
 		FlagVector |= Flag_G
 	}
 
-	// set time formate
+	// set time format
 	switch *f_T {
 	case "Stamp":
-		timeFormate = time.Stamp
+		timeFormat = time.Stamp
 	case "StampMilli":
-		timeFormate = time.StampMilli
+		timeFormat = time.StampMilli
 	case "Kitchen":
-		timeFormate = time.Kitchen
+		timeFormat = time.Kitchen
 	case "ANSIC":
-		timeFormate = time.ANSIC
+		timeFormat = time.ANSIC
 	case "UnixDate":
-		timeFormate = time.UnixDate
+		timeFormat = time.UnixDate
 	case "RubyDate":
-		timeFormate = time.RubyDate
+		timeFormat = time.RubyDate
 	case "RFC1123":
-		timeFormate = time.RFC1123
+		timeFormat = time.RFC1123
 	case "RFC1123Z":
-		timeFormate = time.RFC1123Z
+		timeFormat = time.RFC1123Z
 	case "RFC3339":
-		timeFormate = time.RFC3339
+		timeFormat = time.RFC3339
 	case "RFC822":
-		timeFormate = time.RFC822
+		timeFormat = time.RFC822
 	case "RFC822Z":
-		timeFormate = time.RFC822Z
+		timeFormat = time.RFC822Z
 	case "RFC850":
-		timeFormate = time.RFC850
+		timeFormat = time.RFC850
+	case "ISOshort":
+		timeFormat = "2006-01-02 15:04"
+	case "StampShort":
+		timeFormat = "Jan _2 15:04"
 	default:
-		timeFormate = time.Stamp
+		timeFormat = time.Stamp
 	}
 
 	// set -h flag

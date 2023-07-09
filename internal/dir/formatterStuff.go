@@ -9,7 +9,7 @@ import (
 	"github.com/Yash-Handa/logo-ls/internal/api"
 )
 
-func mainSort(a, b string) bool {
+func oldMainSort(a, b string) bool {
 	switch a {
 	case ".", "..":
 	default:
@@ -23,12 +23,24 @@ func mainSort(a, b string) bool {
 	return strings.ToLower(a) < strings.ToLower(b)
 }
 
+func mainSort(a, b string) bool {
+	return a < b
+}
+
 // Custom less functions
 func lessFuncGenerator(d *dir) {
 	switch {
 	case (api.FlagVector & api.Flag_alpha) > 0:
 		// sort by alphabetical order of name.ext
 		d.less = func(i, j int) bool {
+			return mainSort(d.files[i].name+d.files[i].ext, d.files[j].name+d.files[j].ext)
+		}
+	case (api.FlagVector & api.Flag_dir) > 0:
+		// group directories first, then alphabetically
+		d.less = func(i, j int) bool {
+			if d.files[i].isDir != d.files[j].isDir {
+				return d.files[i].isDir
+			}
 			return mainSort(d.files[i].name+d.files[i].ext, d.files[j].name+d.files[j].ext)
 		}
 	case (api.FlagVector & api.Flag_S) > 0:
@@ -93,7 +105,7 @@ func getIndicator(modebit os.FileMode) (i string) {
 	return i
 }
 
-func getSizeInFormate(b int64) string {
+func getSizeInFormat(b int64) string {
 	if api.FlagVector&api.Flag_h == 0 {
 		return fmt.Sprintf("%d", b)
 	}

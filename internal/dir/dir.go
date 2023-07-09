@@ -25,12 +25,14 @@ var OpenDirIcon = assets.Icon_Def["diropen"].GetColor(1) + assets.Icon_Def["diro
 
 type file struct {
 	name, ext, indicator string
+	isDir                bool
+	linkTo               string // will point to symlink target if there's one
 	modTime              time.Time
 	size                 int64 // in bytes
 	mode                 string
 	modeBits             uint32
 	owner, group         string // use syscall package
-	blocks               int64  // blocks required by the file multiply buy 512 to get block size
+	blocks               int64  // blocks required by the file multiply by 512 to get block size
 	// 'U'-> untracked file 'M'-> Modified file '●'-> modified dir ' '-> Not Updated/ not in git repo
 	gitStatus string
 	icon      string
@@ -108,6 +110,7 @@ func New(d *os.File) (*dir, error) {
 		f.indicator = getIndicator(v.Mode())
 		f.size = v.Size()
 		f.modTime = v.ModTime()
+		f.isDir = v.IsDir()
 		if long {
 			f.mode = v.Mode().String()
 			f.modeBits = uint32(v.Mode())
@@ -234,7 +237,7 @@ func New_Recussion(d *os.File) {
 		temp[i] = filepath.Join(d.Name(), v)
 	}
 	for _, v := range temp {
-		fmt.Printf("\n%s:\n", OpenDirIcon+v)
+		fmt.Printf("\n%s:\n", OpenDirIcon+ctw.ColorizeDirHeader(v))
 		f, err := os.Open(v)
 		if err != nil {
 			log.Printf("cannot access %q: %v\n", v, err)
@@ -263,9 +266,9 @@ func (d *dir) Print() *bytes.Buffer {
 		w := ctw.NewLong(9)
 		for _, v := range d.files {
 			if api.FlagVector&api.Flag_s > 0 {
-				w.AddRow(getSizeInFormate(v.blocks*512), v.mode, v.owner, v.group, getSizeInFormate(v.size), v.modTime.Format(api.GetTimeFormate()), v.icon, v.name+v.ext+v.indicator, v.gitStatus)
+				w.AddRow(getSizeInFormat(v.blocks*512), v.mode, v.owner, v.group, getSizeInFormat(v.size), v.modTime.Format(api.GetTimeFormat()), v.icon, v.name+v.ext+"\t"+v.indicator, v.gitStatus)
 			} else {
-				w.AddRow("", v.mode, v.owner, v.group, getSizeInFormate(v.size), v.modTime.Format(api.GetTimeFormate()), v.icon, v.name+v.ext+v.indicator, v.gitStatus)
+				w.AddRow("", v.mode, v.owner, v.group, getSizeInFormat(v.size), v.modTime.Format(api.GetTimeFormat()), v.icon, v.name+v.ext+"\t"+v.indicator, v.gitStatus)
 			}
 			w.IconColor(v.iconColor)
 		}
@@ -274,9 +277,9 @@ func (d *dir) Print() *bytes.Buffer {
 		w := ctw.NewLong(4)
 		for _, v := range d.files {
 			if api.FlagVector&api.Flag_s > 0 {
-				w.AddRow(getSizeInFormate(v.blocks*512), v.icon, v.name+v.ext+v.indicator, v.gitStatus)
+				w.AddRow(getSizeInFormat(v.blocks*512), v.icon, v.name+v.ext+"\t"+v.indicator, v.gitStatus)
 			} else {
-				w.AddRow("", v.icon, v.name+v.ext+v.indicator, v.gitStatus)
+				w.AddRow("", v.icon, v.name+v.ext+"\t"+v.indicator, v.gitStatus)
 			}
 			w.IconColor(v.iconColor)
 		}
@@ -285,9 +288,9 @@ func (d *dir) Print() *bytes.Buffer {
 		w := ctw.New(sysState.GetTerminalWidth())
 		for _, v := range d.files {
 			if api.FlagVector&api.Flag_s > 0 {
-				w.AddRow(getSizeInFormate(v.blocks*512), v.icon, v.name+v.ext+v.indicator, v.gitStatus)
+				w.AddRow(getSizeInFormat(v.blocks*512), v.icon, v.name+v.ext+"\t"+v.indicator, v.gitStatus)
 			} else {
-				w.AddRow("", v.icon, v.name+v.ext+v.indicator, v.gitStatus)
+				w.AddRow("", v.icon, v.name+v.ext+"\t"+v.indicator, v.gitStatus)
 			}
 			w.IconColor(v.iconColor)
 		}

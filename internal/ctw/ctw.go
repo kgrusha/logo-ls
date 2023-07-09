@@ -11,7 +11,7 @@ type CTW struct {
 	d        [][]string // entire data passed to ctw
 	nw       []int      // widths of each fileName
 	gw       []int      // width of each git column
-	sw       []int      //width of each size column
+	sw       []int      // width of each size column
 	ic       []string   // color of file icon of a row
 	cols     int        // zero based no of cols (or total cols -1)
 	showIcon bool
@@ -63,7 +63,7 @@ func (w *CTW) Flush(buf *bytes.Buffer) {
 	if dn == 0 {
 		return
 	}
-	pad := 2
+	pad := 4
 
 	iw := make([][4]int, 0) // slice of widths of each column (don't use because it over run once)
 	var widths [][4]int
@@ -142,7 +142,7 @@ func (w *CTW) Flush(buf *bytes.Buffer) {
 }
 
 func (w *CTW) colW(b, e int) [4]int {
-	s, n, g := 0, 0, 0 // max od size column, name column, gitStatus column
+	s, n, g := 0, 0, 0 // max of size column, name column, gitStatus column
 	for i := b; i < e; i++ {
 		if w.sw[i] > s {
 			s = w.sw[i]
@@ -169,6 +169,13 @@ func (w *CTW) colW(b, e int) [4]int {
 	return ans
 }
 
+// cs [0 2 18 0]
+// cs[2] -- width
+// w.d[i]
+// 0 - icon color probably, see w.ic[]
+// 1 - icon
+// 2 - file name
+// 3 - gitStatus
 func (w *CTW) printCell(buf *bytes.Buffer, i int, cs [4]int) {
 	if cs[0] > 0 {
 		fmt.Fprintf(buf, "%-*s%s", cs[0]-1, w.d[i][0], brailEmpty)
@@ -176,8 +183,10 @@ func (w *CTW) printCell(buf *bytes.Buffer, i int, cs [4]int) {
 	if w.showIcon {
 		fmt.Fprintf(buf, "%s%1s%s%s", w.ic[i], w.d[i][1], noColor, brailEmpty)
 	}
-	fmt.Fprintf(buf, "%s%-*s%s", getGitColor(w.d[i][3]), cs[2], w.d[i][2], noColor)
+	// filename
+	fmt.Fprintf(buf, "%s%-*s%s", getFilenameColor(w.d[i][2]), cs[2], getSanitizedFilename(w.d[i][2]), noColor)
 
+	// git badge
 	if cs[3] > 0 {
 		fmt.Fprintf(buf, "%s%s%1s%s", brailEmpty, getGitColor(w.d[i][3]), w.d[i][3], noColor)
 	}
